@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "eth-node-rpi.fullname" . }}
+  labels:
+    {{- include "eth-node-rpi.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.besu.ports.portHttp }}
+      targetPort: {{ .Values.besu.ports.portHttp }}
+      protocol: TCP
+      name: besu-http
+    - port: {{ .Values.besu.ports.portP2p }}
+      targetPort: {{ .Values.besu.ports.portP2p }}
+      protocol: TCP
+      name: besu-p2p
+    - port: {{ .Values.teku.ports.portRestApi }}
+      targetPort: {{ .Values.teku.ports.portRestApi }}
+      protocol: TCP
+      name: teku-rest-api
+    - port: {{ .Values.teku.ports.portP2p }}
+      targetPort: {{ .Values.teku.ports.portP2p }}
+      protocol: TCP
+      name: teku-p2p
+  selector:
+    {{- include "eth-node-rpi.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,140 @@
+---
+# Source: eth-node-rpi/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eth-node-rpi-tita
+  labels:
+    helm.sh/chart: eth-node-rpi-0.1.0
+    app.kubernetes.io/name: eth-node-rpi
+    app.kubernetes.io/instance: eth-node-rpi
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: eth-node-rpi/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: eth-node-rpi-tita
+  labels:
+    helm.sh/chart: eth-node-rpi-0.1.0
+    app.kubernetes.io/name: eth-node-rpi
+    app.kubernetes.io/instance: eth-node-rpi
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8545
+      targetPort: 8545
+      protocol: TCP
+      name: besu-http
+    - port: 13001
+      targetPort: 13001
+      protocol: TCP
+      name: besu-p2p
+    - port: 5051
+      targetPort: 5051
+      protocol: TCP
+      name: teku-rest-api
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+      name: teku-p2p
+  selector:
+    app.kubernetes.io/name: eth-node-rpi
+    app.kubernetes.io/instance: eth-node-rpi
+---
+# Source: eth-node-rpi/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eth-node-rpi-tita
+  labels:
+    helm.sh/chart: eth-node-rpi-0.1.0
+    app.kubernetes.io/name: eth-node-rpi
+    app.kubernetes.io/instance: eth-node-rpi
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: eth-node-rpi
+      app.kubernetes.io/instance: eth-node-rpi
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: eth-node-rpi-0.1.0
+        app.kubernetes.io/name: eth-node-rpi
+        app.kubernetes.io/instance: eth-node-rpi
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: eth-node-rpi-tita
+      securityContext:
+        {}
+      containers:
+        - name: besu
+          securityContext:
+            {}
+          image: "hyperledger/besu:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8545
+              protocol: TCP
+            - name: p2p
+              containerPort: 13001
+              protocol: TCP
+          args:
+            - "--rpc-http-enabled"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 4800m
+              memory: 4096Mi
+            requests:
+              cpu: 500m
+              memory: 512Mi
+        - name: teku
+          securityContext:
+            {}
+          image: "consensys/teku:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: rest-api
+              containerPort: 5051
+              protocol: TCP
+            - name: p2p
+              containerPort: 9000
+              protocol: TCP
+          args:
+            - "--network=mainnet"
+            - "--rest-api-enabled=true"
+            - "--rest-api-docs-enabled=true"
+            - "--rest-api-interface=0.0.0.0"
+            - "--p2p-enabled=true"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 4800m
+              memory: 4096Mi
+            requests:
+              cpu: 500m
+              memory: 512Mi

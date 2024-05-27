@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "eth-node-rpi.fullname" . }}
+  labels:
+    {{- include "eth-node-rpi.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "eth-node-rpi.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "eth-node-rpi.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "eth-node-rpi.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: besu
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.besu.image.repository }}:{{ .Values.besu.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.besu.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.besu.ports.portHttp }}
+              protocol: TCP
+            - name: p2p
+              containerPort: {{ .Values.besu.ports.portP2p }}
+              protocol: TCP
+          args:
+            - "--rpc-http-enabled"
+          livenessProbe:
+            {{- toYaml .Values.besu.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.besu.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.besu.resources | nindent 12 }}
+          {{- with .Values.besu.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.besu.volumes }}
+          volumes:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.besu.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.besu.affinity }}
+          affinity:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.besu.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+        - name: teku
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.teku.image.repository }}:{{ .Values.teku.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.teku.image.pullPolicy }}
+          ports:
+            - name: rest-api
+              containerPort: {{ .Values.teku.ports.portRestApi }}
+              protocol: TCP
+            - name: p2p
+              containerPort: {{ .Values.teku.ports.portP2p }}
+              protocol: TCP
+          args:
+            - "--network=mainnet"
+            - "--rest-api-enabled=true"
+            - "--rest-api-docs-enabled=true"
+            - "--rest-api-interface=0.0.0.0"
+            - "--p2p-enabled=true"
+          livenessProbe:
+            {{- toYaml .Values.teku.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.teku.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.teku.resources | nindent 12 }}
+          {{- with .Values.teku.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.teku.volumes }}
+          volumes:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.teku.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.teku.affinity }}
+          affinity:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.teku.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}

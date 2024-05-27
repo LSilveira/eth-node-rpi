@@ -1,0 +1,69 @@
+env: "tita"
+replicaCount: 1
+
+# Default values for eth-node-rpi.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+imagePullSecrets: []
+nameOverride: "eth-node-rpi"
+fullnameOverride: "eth-node-rpi"
+
+service:
+  type: ClusterIP
+
+ingress:
+  hosts:
+    besu:
+      - host: besu.example.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    teku:
+      host: teku.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+besu:
+  image:
+    repository: hyperledger/besu
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: latest
+  ports:
+    portHttp: 8545
+    portP2p: 13001
+
+  resources: 
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "4800m"
+      memory: "4096Mi"
+
+teku:
+  image:
+    repository: consensys/teku
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: latest
+
+  ports:
+    portRestApi: 5051
+    portP2p: 9000
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "4800m"
+      memory: "4096Mi"
