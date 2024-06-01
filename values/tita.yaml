@@ -40,7 +40,9 @@ besu:
   ports:
     portHttp: 8545
     portP2p: 13001
-
+  volumeMounts:
+    - name: besu-data
+      mountPath: /opt/besu
   resources: 
     requests:
       cpu: "500m"
@@ -55,11 +57,12 @@ teku:
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: latest
-
   ports:
     portRestApi: 5051
     portP2p: 9000
-
+  volumeMounts:
+    - name: teku-data
+      mountPath: /opt/teku
   resources:
     requests:
       cpu: "500m"
